@@ -9,6 +9,10 @@
 // the number of seconds you want the character to wait at its 
 // position for.
 
+// TODO: Add values to each subarray for: Which direction is the bishop facing?
+// And if the bishop has to wait on a space, is a eagle rug/censer/whatever 
+// required?
+
 var bishopPositions = [
 						[7, 11], 
 						["wait", 5], 

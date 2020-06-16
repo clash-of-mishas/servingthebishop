@@ -29,6 +29,7 @@ var bishopEndPos = bishopPositions.length;
 // "up", so mouseUp equals true, for now.
 var mouseDown = false;
 var mouseUp = true;
+var mouseClick = false;
 
 // Variables to check where the mouse pointer is, on the entire screen.
 var mousePosX = 0;
@@ -92,6 +93,7 @@ window.onload = function(){
 	canvas.addEventListener("mousedown", handleDown);
 	canvas.addEventListener("mouseup", handleUp);
 	canvas.addEventListener("mousemove", handleMove);
+	canvas.addEventListener("click", handleClick);
 	// Load images.
 	loadImages();
 	// We ask the browser to call mainLoop() whenever it's ready.
@@ -102,7 +104,7 @@ window.onload = function(){
 function loadImages(){
 	// first, we create a new Image() object.
 	bishop = new Image();
-	bishop.src = "images/bishop_test.png";  // Provide the location for it.
+	bishop.src = "images/bishop_mitre.png";  // Provide the location for it.
 	// When the browser has finished loading the photo into the RAM, it will
 	// call this function - .onload() for each photo. Each onload() will increment
 	// imagesLoaded, and check if is is the same as totalImages. If so, we 
@@ -115,8 +117,7 @@ function loadImages(){
 	}
 		
 	// Initialise the images' corresponding variables with some random values.
-	bishopX = 0; bishopY = 0;
-	bishopWait = 0; bishopPos = 0;
+	resetBishop();
 }
 
 // The actual game function which aso is the all-important game loop. It sets 
@@ -159,8 +160,10 @@ function update(){
 	// the game state is set to main menu, so let's show that.
 	if (gameState == "main_menu"){
 		showMainMenu();
-		if (mouseDown){
+		if (mouseClick){
+			mouseClick = false;
 			gameState = "play";
+			resetBishop();
 		}
 	}
 	
@@ -172,7 +175,7 @@ function update(){
 		drawCursor();
 		
 		// Check if the game has finished. We do this by checking if we has reached
-		// the end of the bishop positions array.
+		// the end of the bishop positions array, given in the positions.js file.
 		if (bishopPos < bishopEndPos){
 			var nextPos = bishopPositions[bishopPos];
 			
@@ -191,6 +194,13 @@ function update(){
 			else{
 				bishopWait = 0;
 				
+				// This block of code below changes the bishop's X and Y 
+				// coordinates based on where the bishop is heading.
+				// First, we need to check if the desired position is to the
+				// left or right, above or below of the bishop. Then we need to 
+				// change the bishop's x and y coords by a little bit, moving 
+				// it closer to the position. We do this every frame until the
+				// bishop has arrived at the position.
 				var x = (nextPos[0] * boxSize); var y = (nextPos[1] * boxSize);
 				if (bishopX > x){ 
 					bishopX -= (speed / FPS);
@@ -220,7 +230,8 @@ function update(){
 	}
 	
 	else if (gameState == "end"){
-		
+		alert("Game over!");
+		gameState = "main_menu";
 	}
 }
 
@@ -234,6 +245,10 @@ function handleDown(event){
 function handleUp(event){
 	mouseDown = false;
 	mouseUp = true;
+}
+
+function handleClick(event){
+	mouseClick = true;
 }
 
 // This function handles the mouse movement. It simply updates the mousePosX and Y.
@@ -290,5 +305,13 @@ function showMainMenu(){
 	context.textAlign = "center";
 	context.fillText("Serving the Bishop", (canvas.width / 2), (canvas.width / 6));
 	
-	// Continue here
+	// TODO: Add buttons for play, options, highscores and credits.
+}
+
+function resetBishop(){
+	bishopX = 0;
+	bishopY = 0;
+	bishopPos = 0;
+	bishopWait = 0;
+	bishopFacing = "north";
 }
