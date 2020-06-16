@@ -15,7 +15,7 @@ var canvasRect;
 // add one to imagesLoaded. If imagesLoaded == totalImages then we know that all images
 // have been loaded!
 var imagesLoaded = 0;
-var totalImages = 1;
+var totalImages = 2;
 
 // Here is where we will keep the image variables along with their X and Y coordinates, and 
 // their Drag variable, which will check if they are being dragged by the mouse. wait is
@@ -24,6 +24,18 @@ var totalImages = 1;
 var bishop; var bishopX; var bishopY; 
 var bishopPos; var bishopWait; var bishopFacing;
 var bishopEndPos = bishopPositions.length;
+
+// The eagle rug. eagleRugs will hold an array that keeps track of all of our 
+// eagle rugs in the game.
+var eagleRug;
+// javascript doesn't let you declare an empty array, so we need to add a random
+// value then delete it.
+var eagleRugs = [0];
+eagleRugs.length = 0;
+var maxNumRugs = 4;
+// This integer lets us know whether if the user is dragging a mouse. If so, this
+// value will be set to the index of the array of the rug being dragged.
+var isCarryingRug = -1;
 
 // Checking if the user has clicked the mouse. By default the mouse is always
 // "up", so mouseUp equals true, for now.
@@ -39,10 +51,10 @@ var mousePosY = 0;
 // currently on the screen.
 var gameState = "none";
 
-// Slows down the game to 30 FPS. It needs to know how long it took since the 
+// Slows down the game to 60 FPS. It needs to know how long it took since the 
 // last frame was drawn, so it can slow the computer down to maintain a stable FPS.
 // Delta will keep track of how many millisecond has passed since last frame. We 
-// will use this to keep the FPS capped at 30.
+// will use this to keep the FPS capped at 60.
 var FPS = 60;
 var delta = 0;
 var lastTimestamp = 0;
@@ -52,6 +64,7 @@ var lastTimestamp = 0;
 // height by the grid.  
 var grid = 12;
 var boxSize;
+var halfBox;
 
 // How fast all the characters move on the canvas. Higher number = harder.
 var speed = 100;
@@ -84,6 +97,7 @@ window.onload = function(){
 	// This is required to work out where the user has clicked the mouse later on.
 	canvasRect = canvas.getBoundingClientRect();
 	boxSize = Math.round(canvas.width / grid);
+	halfBox = boxSize / 2;
 	
 	// Ask the browser very nicely to call the corresponding funcions when the user 
 	// clicks the mouse or moves the mouse in the canvas. addEventListener()
@@ -110,6 +124,15 @@ function loadImages(){
 	// imagesLoaded, and check if is is the same as totalImages. If so, we 
 	// have loaded all the images!
 	bishop.onload = function(){ 
+		imagesLoaded += 1;
+		if (imagesLoaded == totalImages){ 
+			gameState = "main_menu"; 
+		}
+	}
+	
+	eagleRug = new Image();
+	eagleRug.src = "images/eagle_rug.png";
+	eagleRug.onload = function(){ 
 		imagesLoaded += 1;
 		if (imagesLoaded == totalImages){ 
 			gameState = "main_menu"; 
@@ -164,11 +187,90 @@ function update(){
 			mouseClick = false;
 			gameState = "play";
 			resetBishop();
+			resetRugs();
 		}
 	}
 	
 	// Update the game.
 	else if (gameState == "play"){
+		// We need to draw the eagle rug first, then the bishop over that. It 
+		// would look weird if the eagle rug was drawn on the top of the bishop,
+		// right?
+		drawBox(eagleRug, 11, 0);
+		
+		// the user has clicked. We need to check if the mouse is over something
+		// and then deal with it.
+		if (mouseDown){
+			// the user has clicked on a new rug. We need to create a new rug
+			// in the array and set it to true so that it will only be drawn at
+			// the mouse position.
+			if (same(whichBox(mousePosX, mousePosY), [11, 0]) && (isCarryingRug == -1)){
+				// check if number of eagle rugs exceeds maximum number.
+				if (eagleRugs.length < maxNumRugs){
+					// append a new rug to the end of the array, and set the third
+					// value to "true", meaning the user is currently moving it.
+					eagleRugs.push([0, 0, true]);
+					isCarryingRug = eagleRugs.length - 1;
+				}
+			}
+			// user has clicked on a rug already on the floor.
+			else if (isCarryingRug == -1){
+				var pos = rugAtPos(whichBox(mousePosX, mousePosY));
+				// check if the box is not empty. If so, there is a rug on it.
+				if (pos > -1){
+					isCarryingRug = pos;
+					eagleRugs[pos][2] = true;
+				}
+			}
+		}
+		
+		// the user has let go of the left mouse button (LMB), so we drop the 
+		// rug at the desired block.
+		if (isCarryingRug > -1){
+			if (mouseUp){
+				// if the user has dropped the rug at the "new rug position", we 
+				// delete that rug, by going through the rugs array and find the 
+				// "active" one (ie, the third value is true) and delete it.
+				if (same(whichBox(mousePosX, mousePosY), [11, 0])){
+					eagleRugs.splice(isCarryingRug, 1);
+					console.log("here");
+				}
+				else{
+					// We set the box coords (NOT the canvas coords!) of the current
+					// rug to the mouse position, and set it to false - meaning the 
+					// user has officially dropped it into place.
+					var pos = whichBox(mousePosX, mousePosY);
+					// first, we call emptyAtPos() to make sure that there is nothing
+					// on the floor.
+					console.log();
+					if (rugAtPos(pos) == -1){
+						eagleRugs[isCarryingRug][0] = pos[0];
+						eagleRugs[isCarryingRug][1] = pos[1];
+						eagleRugs[isCarryingRug][2] = false;
+					}
+					// there is already something on the floor, so nope, delete the 
+					// rug the user has dropped.
+					else{
+						eagleRugs.splice(isCarryingRug, 1);
+					}
+				}
+				isCarryingRug = -1;
+			}
+			else{
+				drawImg(eagleRug, (mousePosX - halfBox), (mousePosY - halfBox));
+			}
+			
+		}
+		
+		// Goes through all the rugs in the array. 1st, check if the last value
+		// is a FALSE - meaning that the rug is just sitting there. It is not 
+		// being dragged around by the mouse.
+		for (i = 0; i < eagleRugs.length; i++){
+			if (!eagleRugs[i][2]){
+				drawBox(eagleRug, eagleRugs[i][0], eagleRugs[i][1]);
+			}
+		}
+			
 		// We draw each images at its x and y variables.
 		drawImg(bishop, bishopX, bishopY);
 		// This draws an outline of the box that the mouse is currently hovering over.
@@ -222,6 +324,7 @@ function update(){
 				
 				if (bishopX == x && bishopY == y){ bishopPos++; }
 			}
+			console.log(eagleRugs);
 		}
 		else{
 			// the game has finished.
@@ -232,6 +335,7 @@ function update(){
 	else if (gameState == "end"){
 		alert("Game over!");
 		gameState = "main_menu";
+		mouseClick = false;
 	}
 }
 
@@ -293,7 +397,7 @@ function whichBox(canvasX, canvasY){
 }
 
 // Another syntatic sugar. This time, it compares the first two values of an array
-// and if they are identical, it returns true.
+// and if they are identical, it returns a single true. NOT AN ARRAY!
 function same(array1, array2){
 	return((array1[0] == array2[0]) && (array1[1] == array2[1]))
 }
@@ -308,10 +412,32 @@ function showMainMenu(){
 	// TODO: Add buttons for play, options, highscores and credits.
 }
 
+// reset the bishop variables back to default states, ready for a new game.
 function resetBishop(){
 	bishopX = 0;
 	bishopY = 0;
 	bishopPos = 0;
 	bishopWait = 0;
 	bishopFacing = "north";
+}
+
+// Delete all rugs.
+function resetRugs(){
+	eagleRugs = [0];
+	eagleRugs.length = 0;
+	isCarryingRug = -1;
+}
+
+// This function accepts a array for input. It checks the first two values of it,
+// which it assumes are the x and y coords for a box on the canvas. It then goes
+// through all the eagle rugs, checking if each of them is lying on the exact same
+// place. If so, it returns the index number of the rug in the array. Otherwise,
+// a -1.
+function rugAtPos(box){
+	for (i = 0; i < eagleRugs.length; i++){
+		if (same(box, eagleRugs[i])){
+			return i;
+		}
+	}
+	return -1;
 }
