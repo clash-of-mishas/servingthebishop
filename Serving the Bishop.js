@@ -25,6 +25,10 @@ var bishop; var bishopX; var bishopY;
 var bishopPos; var bishopWait; var bishopFacing;
 var bishopEndPos = bishopPositions.length;
 
+// the image for the right hand side where all the rugs, censers, candles, etc
+// will go.
+var side;
+
 // The eagle rug. eagleRugs will hold an array that keeps track of all of our 
 // eagle rugs in the game.
 var eagleRug;
@@ -36,6 +40,7 @@ var maxNumRugs = 4;
 // This integer lets us know whether if the user is dragging a mouse. If so, this
 // value will be set to the index of the array of the rug being dragged.
 var isCarryingRug = -1;
+var rugPos = [12, 0];
 
 // Checking if the user has clicked the mouse. By default the mouse is always
 // "up", so mouseUp equals true, for now.
@@ -62,12 +67,17 @@ var lastTimestamp = 0;
 // The grid of how everything will lay out. The screen will consist of a grid x grid
 // box grid. BoxSize will be determined later when we divide the screen width and 
 // height by the grid.  
-var grid = 12;
+var grid = 13;
 var boxSize;
 var halfBox;
 
 // How fast all the characters move on the canvas. Higher number = harder.
 var speed = 100;
+
+// The score. Everything you do in the game will increase the score. The amount
+// increased depends on the timing. For example, if you give the bishop the 
+// censer on time, you get more score. But if you're late, less score.
+var score = 0;
 
 // When the website have finished loading, the browser will automatically call
 // the window.onload = function(){} function. This is our entry point.  
@@ -123,24 +133,25 @@ function loadImages(){
 	// call this function - .onload() for each photo. Each onload() will increment
 	// imagesLoaded, and check if is is the same as totalImages. If so, we 
 	// have loaded all the images!
-	bishop.onload = function(){ 
-		imagesLoaded += 1;
-		if (imagesLoaded == totalImages){ 
-			gameState = "main_menu"; 
-		}
-	}
+	bishop.onload = imgLoad;
 	
 	eagleRug = new Image();
 	eagleRug.src = "images/eagle_rug.png";
-	eagleRug.onload = function(){ 
-		imagesLoaded += 1;
-		if (imagesLoaded == totalImages){ 
-			gameState = "main_menu"; 
-		}
-	}
+	eagleRug.onload = imgLoad;
+	
+	side = new Image();
+	side.src = "images/side.png";
+	side.onload = imgLoad;
 		
 	// Initialise the images' corresponding variables with some random values.
 	resetBishop();
+}
+
+function imgLoad(){
+	imagesLoaded += 1;
+	if (imagesLoaded == totalImages){ 
+		gameState = "main_menu"; 
+	}
 }
 
 // The actual game function which aso is the all-important game loop. It sets 
@@ -177,7 +188,7 @@ function update(){
 	// in this case hexadecimal #FFFFFF, which is 111111111111111111111111 in
 	// binary and is the colour white. Then we draw a rectangle from 0, 0 to the 
 	// canvas width and height. It could be any colour; but I like white :D
-	context.fillStyle = "#FFFFFF";
+	context.fillStyle = "rgb(255, 255, 255)";
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	
 	// the game state is set to main menu, so let's show that.
@@ -193,10 +204,17 @@ function update(){
 	
 	// Update the game.
 	else if (gameState == "play"){
+		// draw the side colour
+		context.drawImage(side, ((grid - 1) * boxSize), 0, canvas.width, canvas.height);
+		// and the border
+		context.strokeStyle = "rgb(0, 0, 0)";
+		context.lineWidth = 3;
+		context.strokeRect(((grid - 1) * boxSize), 1, boxSize - 1, canvas.height - 2);
+		
 		// We need to draw the eagle rug first, then the bishop over that. It 
 		// would look weird if the eagle rug was drawn on the top of the bishop,
 		// right?
-		drawBox(eagleRug, 11, 0);
+		drawBox(eagleRug, rugPos[0], rugPos[1]);
 		
 		// the user has clicked. We need to check if the mouse is over something
 		// and then deal with it.
@@ -204,7 +222,7 @@ function update(){
 			// the user has clicked on a new rug. We need to create a new rug
 			// in the array and set it to true so that it will only be drawn at
 			// the mouse position.
-			if (same(whichBox(mousePosX, mousePosY), [11, 0]) && (isCarryingRug == -1)){
+			if (same(whichBox(mousePosX, mousePosY), rugPos) && (isCarryingRug == -1)){
 				// check if number of eagle rugs exceeds maximum number.
 				if (eagleRugs.length < maxNumRugs){
 					// append a new rug to the end of the array, and set the third
@@ -228,12 +246,11 @@ function update(){
 		// rug at the desired block.
 		if (isCarryingRug > -1){
 			if (mouseUp){
-				// if the user has dropped the rug at the "new rug position", we 
+				// if the user has dropped the rug at the right side, we 
 				// delete that rug, by going through the rugs array and find the 
 				// "active" one (ie, the third value is true) and delete it.
-				if (same(whichBox(mousePosX, mousePosY), [11, 0])){
+				if (whichBox(mousePosX, mousePosY)[0] == rugPos[0]){
 					eagleRugs.splice(isCarryingRug, 1);
-					console.log("here");
 				}
 				else{
 					// We set the box coords (NOT the canvas coords!) of the current
@@ -242,13 +259,13 @@ function update(){
 					var pos = whichBox(mousePosX, mousePosY);
 					// first, we call emptyAtPos() to make sure that there is nothing
 					// on the floor.
-					console.log();
-					if (rugAtPos(pos) == -1){
+					if (rugAtPos(pos) == -1 || rugAtPos(pos) == isCarryingRug){
 						eagleRugs[isCarryingRug][0] = pos[0];
 						eagleRugs[isCarryingRug][1] = pos[1];
 						eagleRugs[isCarryingRug][2] = false;
 					}
-					// there is already something on the floor, so nope, delete the 
+					
+					// there is already a rug on the floor, so nope, delete the 
 					// rug the user has dropped.
 					else{
 						eagleRugs.splice(isCarryingRug, 1);
@@ -273,8 +290,6 @@ function update(){
 			
 		// We draw each images at its x and y variables.
 		drawImg(bishop, bishopX, bishopY);
-		// This draws an outline of the box that the mouse is currently hovering over.
-		drawCursor();
 		
 		// Check if the game has finished. We do this by checking if we has reached
 		// the end of the bishop positions array, given in the positions.js file.
@@ -324,16 +339,18 @@ function update(){
 				
 				if (bishopX == x && bishopY == y){ bishopPos++; }
 			}
-			console.log(eagleRugs);
+			
+			// This draws an outline of the box that the mouse is currently hovering over.
+			drawCursor();
+			drawScore();
 		}
 		else{
 			// the game has finished.
 			gameState = "end"
 		}
 	}
-	
+	// When the game has finished, we want to go back to the main menu.
 	else if (gameState == "end"){
-		alert("Game over!");
 		gameState = "main_menu";
 		mouseClick = false;
 	}
@@ -387,6 +404,8 @@ function drawImg(image, x, y){
 function drawCursor(){
 	var tmp = whichBox(mousePosX, mousePosY);
 	// Draw a outline of a box.
+	context.strokeStyle = "rgb(0, 0, 0)";
+	context.lineWidth = 2;
 	context.strokeRect((tmp[0] * boxSize), (tmp[1] * boxSize), boxSize, boxSize);
 }
 
@@ -404,7 +423,7 @@ function same(array1, array2){
 
 function showMainMenu(){
 	// Draw "Serving the Bishop" on the middle of the screen.
-	context.fillStyle = "#000000";
+	context.fillStyle = "rgb(0, 0, 0)"
 	context.font = "40px Verdana";
 	context.textAlign = "center";
 	context.fillText("Serving the Bishop", (canvas.width / 2), (canvas.width / 6));
@@ -440,4 +459,10 @@ function rugAtPos(box){
 		}
 	}
 	return -1;
+}
+
+// Draws the score at the top left 
+function drawScore(){
+	context.fillStyle = "rgb(0, 0, 0)";
+	// context.fillText();
 }

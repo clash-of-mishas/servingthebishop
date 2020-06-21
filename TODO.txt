@@ -1,0 +1,10 @@
+1. Add values to each subarray in positions.js to check if the bishop has to wait 
+on a space, is a eagle rug/censer/whatever required?
+2. In the positions.js array, for each time the bishop requires interaction 
+from the user, there must be a score to add to the total score. 
+3. Code and display the score in the game.
+4. Change so that instead of drawing text on the screen for the title on the main
+menu, draw a image. 
+5. Draw a "Serving the Bishop" image for the main menu.
+6. Draw "Start", "Options" and "Leaderboards" buttons for the main menu.
+7. Code so that 
