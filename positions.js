@@ -10,7 +10,15 @@
 // position for.
 
 var bishopPositions = [
-						[7, 11], 
+						[7, 12], 
 						["wait", 5], 
-						[7, 9]
+						[7, 9, "requires", "rug", 20], 
+						["wait", 2], 
+						[10, 9], 
+						[10, 5], 
+						[8, 5, "requires", "rug", 5], 
+						["wait", 5], 
+						[4, 5, "requires", "rug", 10], 
+						["wait", 3], 
+						[4, 7]
 					  ];

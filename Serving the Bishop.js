@@ -22,12 +22,15 @@ var totalImages = 2;
 // used to make the bishop wait at its position for however long the is specified in 
 // the positions.js file.
 var bishop; var bishopX; var bishopY; 
-var bishopPos; var bishopWait; var bishopFacing;
+var bishopPos; var bishopWait;
 var bishopEndPos = bishopPositions.length;
 
 // the image for the right hand side where all the rugs, censers, candles, etc
 // will go.
 var side;
+
+// the main menu title, and its sizes (calculated later)
+var title; var titleSizeX; var titleSizeY;
 
 // The eagle rug. eagleRugs will hold an array that keeps track of all of our 
 // eagle rugs in the game.
@@ -109,6 +112,8 @@ window.onload = function(){
 	boxSize = Math.round(canvas.width / grid);
 	halfBox = boxSize / 2;
 	
+	titleSizeX = boxSize * (grid - 1);
+	
 	// Ask the browser very nicely to call the corresponding funcions when the user 
 	// clicks the mouse or moves the mouse in the canvas. addEventListener()
 	// asks the browser to listen for the first parameter, e.g. "mousedown", 
@@ -142,6 +147,10 @@ function loadImages(){
 	side = new Image();
 	side.src = "images/side.png";
 	side.onload = imgLoad;
+	
+	title = new Image();
+	title.src = "images/title.png";
+	title.onload = imgLoad;
 		
 	// Initialise the images' corresponding variables with some random values.
 	resetBishop();
@@ -210,6 +219,9 @@ function update(){
 		context.strokeStyle = "rgb(0, 0, 0)";
 		context.lineWidth = 3;
 		context.strokeRect(((grid - 1) * boxSize), 1, boxSize - 1, canvas.height - 2);
+		// Draw the border for the top row too. This row will contain the score
+		// and other stats.
+		context.strokeRect(1, 1, ((grid - 1) * boxSize), boxSize);
 		
 		// We need to draw the eagle rug first, then the bishop over that. It 
 		// would look weird if the eagle rug was drawn on the top of the bishop,
@@ -287,8 +299,14 @@ function update(){
 				drawBox(eagleRug, eagleRugs[i][0], eagleRugs[i][1]);
 			}
 		}
-			
-		// We draw each images at its x and y variables.
+		
+		// We want the bishop to start at the first position instantaneously, not
+		// at (0, 0) and slowly move to the first position.
+		if (bishopPos == 0){
+			bishopX = bishopPositions[0][0] * boxSize;
+			bishopY = bishopPositions[0][1] * boxSize;
+		}
+		// We draw the bishop at its x and y variables.
 		drawImg(bishop, bishopX, bishopY);
 		
 		// Check if the game has finished. We do this by checking if we has reached
@@ -337,7 +355,26 @@ function update(){
 					if (bishopY > y){ bishopY = y; }
 				}
 				
-				if (bishopX == x && bishopY == y){ bishopPos++; }
+				// if the bishop has arrived at the next position, then we increment
+				// the bishop position counter.
+				if (bishopX == x && bishopY == y){ 
+					bishopPos++; 
+					
+					// Does the next command include more than 2 variables? (remember,
+					// the first two are the x and y coords)
+					if (nextPos.length > 2){
+						// Does the bishop need something whilst at this position?
+						if (nextPos[2] == "requires"){
+							// A rug should be at this position. If so, add the score
+							// specified in the next variable. If not, you failed.
+							if (nextPos[3] == "rug"){
+								if (rugAtPos([nextPos[0], nextPos[1]]) > -1){
+									score += nextPos[4];
+								}
+							}
+						}
+					}
+				}
 			}
 			
 			// This draws an outline of the box that the mouse is currently hovering over.
@@ -423,12 +460,7 @@ function same(array1, array2){
 
 function showMainMenu(){
 	// Draw "Serving the Bishop" on the middle of the screen.
-	context.fillStyle = "rgb(0, 0, 0)"
-	context.font = "40px Verdana";
-	context.textAlign = "center";
-	context.fillText("Serving the Bishop", (canvas.width / 2), (canvas.width / 6));
-	
-	// TODO: Add buttons for play, options, highscores and credits.
+	context.drawImage(title, 0, 0, titleSizeX, 100);
 }
 
 // reset the bishop variables back to default states, ready for a new game.
@@ -437,7 +469,6 @@ function resetBishop(){
 	bishopY = 0;
 	bishopPos = 0;
 	bishopWait = 0;
-	bishopFacing = "north";
 }
 
 // Delete all rugs.
@@ -461,8 +492,10 @@ function rugAtPos(box){
 	return -1;
 }
 
-// Draws the score at the top left 
+// Draws the score at the top left.
 function drawScore(){
 	context.fillStyle = "rgb(0, 0, 0)";
-	// context.fillText();
+	context.font = "20px Verdana";
+	context.textAlign = "left";
+	context.fillText("Score: " + score, 10, 30);
 }
