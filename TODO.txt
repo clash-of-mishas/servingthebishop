@@ -4,8 +4,8 @@
 should turn from default to with-staff, and vice versa - click on the bishop
 and get the staff from him and put the staff back on the right side. Bishop's
 image goes back to normal.
-- Change so that instead of drawing text on the screen for the title on the main
-menu, draw a image. 
-- Draw "Start", "Options" and "Leaderboards" buttons for the main menu.
+- Draw a "Game Over!" screen
 - Code the "Game Over!" screen
-- Code so that user needs to click "play" button to start, not just click anywhere.
+
+For when the game is finished - fuly coded:
+- Draw the leaderboards button and code it.

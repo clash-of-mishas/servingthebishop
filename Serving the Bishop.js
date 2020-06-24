@@ -29,8 +29,16 @@ var bishopEndPos = bishopPositions.length;
 // will go.
 var side;
 
-// the main menu title, and its sizes (calculated later)
-var title; var titleSizeX; var titleSizeY;
+// the main menu title, its sizes and position (calculated later)
+var title; var titleSizeX; var titleSizeY; var titlePosX;
+
+// the play, options ad other buttons.
+var playButton; var playSizeX; var playSizeY; var playPosX; var playPosY; var playAlpha = 0;
+var optButton; var optSizeX; var optSizeY; var optPosX; var optPosY; var optAlpha = 0;
+
+// The speed at which animations such as buttons when you hover the mouse on fades
+// in and out. This value can be between 0 and 1, 1 being instantaneous.
+var fadeSpeed = 0.2;
 
 // The eagle rug. eagleRugs will hold an array that keeps track of all of our 
 // eagle rugs in the game.
@@ -112,7 +120,17 @@ window.onload = function(){
 	boxSize = Math.round(canvas.width / grid);
 	halfBox = boxSize / 2;
 	
-	titleSizeX = boxSize * (grid - 1);
+	// Calculate the optimal width+height of the main menu title.
+	titleSizeX = (canvas.width / 4) * 3;
+	titleSizeY = Math.floor(titleSizeX / 1.777);
+	titlePosX = (canvas.width / 4) / 2;
+	
+	// same for all buttons.
+	playPosX = boxSize * 2;                    optPosX = boxSize * 7;
+	playPosY = boxSize * 8;                    optPosY = playPosY;
+	playSizeX = boxSize * 4;                   optSizeX = playSizeX;
+	playSizeY = Math.floor(playSizeX / 1.777); optSizeY = playSizeY;
+	
 	
 	// Ask the browser very nicely to call the corresponding funcions when the user 
 	// clicks the mouse or moves the mouse in the canvas. addEventListener()
@@ -140,17 +158,17 @@ function loadImages(){
 	// have loaded all the images!
 	bishop.onload = imgLoad;
 	
-	eagleRug = new Image();
-	eagleRug.src = "images/eagle_rug.png";
-	eagleRug.onload = imgLoad;
+	eagleRug = new Image();                 side = new Image();
+	eagleRug.src = "images/eagle_rug.png";  side.src = "images/side.png";
+	eagleRug.onload = imgLoad;              side.onload = imgLoad;
 	
-	side = new Image();
-	side.src = "images/side.png";
-	side.onload = imgLoad;
+	title = new Image();             playButton = new Image();
+	title.src = "images/title.png";  playButton.src = "images/play.png";
+	title.onload = imgLoad;          playButton.onload = imgLoad;
 	
-	title = new Image();
-	title.src = "images/title.png";
-	title.onload = imgLoad;
+	optButton = new Image();
+	optButton.src = "images/options.png";
+	optButton.onload = imgLoad;
 		
 	// Initialise the images' corresponding variables with some random values.
 	resetBishop();
@@ -205,9 +223,12 @@ function update(){
 		showMainMenu();
 		if (mouseClick){
 			mouseClick = false;
-			gameState = "play";
-			resetBishop();
-			resetRugs();
+			// we need to check if mouse is inside the "play" box.
+			if (mouseIn(playPosX, playPosY, playSizeX, playSizeY)){
+				gameState = "play";
+				resetBishop();
+				resetRugs();
+			}
 		}
 	}
 	
@@ -460,7 +481,31 @@ function same(array1, array2){
 
 function showMainMenu(){
 	// Draw "Serving the Bishop" on the middle of the screen.
-	context.drawImage(title, 0, 0, titleSizeX, 100);
+	context.drawImage(title, titlePosX, 0, titleSizeX, titleSizeY);
+	// Draw the play button. The otline is drawn too. Depending on the alpha 
+	// value, it may or may not be invisible. The code below checks if the mouse
+	// is inside the box. If so, 
+	context.drawImage(playButton, playPosX, playPosY, playSizeX, playSizeY);
+	context.strokeStyle = "rgba(255, 255, 0, " + playAlpha + ")";
+	context.lineWidth = 8;
+	context.strokeRect(playPosX, playPosY, playSizeX, playSizeY);
+	
+	context.drawImage(optButton, optPosX, optPosY, optSizeX, optSizeY);
+	context.strokeStyle = "rgba(255, 255, 0, " + optAlpha + ")";
+	context.strokeRect(optPosX, optPosY, optSizeX, optSizeY);
+	
+	// we check if the mouse is hovering over the play button. If so, we draw a
+	// yellow outline of it to show the player that he/she is selecting it.
+	if (mouseIn(playPosX, playPosY, playSizeX, playSizeY)){
+		if (playAlpha < 1){ playAlpha += fadeSpeed; }
+	}
+	else if (playAlpha > 0){ playAlpha -= fadeSpeed; }
+	
+	// Same for options button.
+	if (mouseIn(optPosX, optPosY, optSizeX, optSizeY)){
+		if (optAlpha < 1){ optAlpha += fadeSpeed; }
+	}
+	else if (optAlpha > 0){ optAlpha -= fadeSpeed; }
 }
 
 // reset the bishop variables back to default states, ready for a new game.
@@ -498,4 +543,18 @@ function drawScore(){
 	context.font = "20px Verdana";
 	context.textAlign = "left";
 	context.fillText("Score: " + score, 10, 30);
+}
+
+// This function accepts four inputs: the x and y coords of a box on the canvas, and
+// the width and height of the box. It will then check the mouse positions and if 
+// they are inside the box, then return true.
+function mouseIn(x, y, width, height){
+	// check if the mouse x position is between the left and right sides x coords
+	// of the box.
+	var isInX = (mousePosX > x) && (mousePosX < (x + width));
+	// Similar to the x position, but we check if the mouse is inside the top and
+	// bottom side of the box.
+	var isInY = (mousePosY > y) && (mousePosY < (y + height));
+	// If both values are true, then we return true with an AND operator.
+	return isInX && isInY;
 }
