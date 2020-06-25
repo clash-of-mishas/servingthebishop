@@ -15,7 +15,7 @@ var canvasRect;
 // add one to imagesLoaded. If imagesLoaded == totalImages then we know that all images
 // have been loaded!
 var imagesLoaded = 0;
-var totalImages = 2;
+var totalImages = 8;
 
 // Here is where we will keep the image variables along with their X and Y coordinates, and 
 // their Drag variable, which will check if they are being dragged by the mouse. wait is
@@ -24,6 +24,7 @@ var totalImages = 2;
 var bishop; var bishopX; var bishopY; 
 var bishopPos; var bishopWait;
 var bishopEndPos = bishopPositions.length;
+var bishopCrosier; // the image of the bishop with the crosier
 
 // the image for the right hand side where all the rugs, censers, candles, etc
 // will go.
@@ -35,6 +36,11 @@ var title; var titleSizeX; var titleSizeY; var titlePosX;
 // the play, options ad other buttons.
 var playButton; var playSizeX; var playSizeY; var playPosX; var playPosY; var playAlpha = 0;
 var optButton; var optSizeX; var optSizeY; var optPosX; var optPosY; var optAlpha = 0;
+
+// the crosier (the staff the bishop holds with the two dragon heads on the top 
+// of it) and a variable to check if the bishop is currently holding it.
+var crosier; var crosierPos = [12, 1]; var isHoldingCrosier = false;
+var dragCrosier; // check if user is dragging the crosier with the mouse.
 
 // The speed at which animations such as buttons when you hover the mouse on fades
 // in and out. This value can be between 0 and 1, 1 being instantaneous.
@@ -166,9 +172,13 @@ function loadImages(){
 	title.src = "images/title.png";  playButton.src = "images/play.png";
 	title.onload = imgLoad;          playButton.onload = imgLoad;
 	
-	optButton = new Image();
-	optButton.src = "images/options.png";
-	optButton.onload = imgLoad;
+	optButton = new Image();               crosier = new Image();
+	optButton.src = "images/options.png";  crosier.src = "images/crosier.png";
+	optButton.onload = imgLoad;            crosier.onload = imgLoad;
+	
+	bishopCrosier = new Image();
+	bishopCrosier.src = "images/bishop_crosier.png";
+	bishopCrosier.onload = imgLoad;
 		
 	// Initialise the images' corresponding variables with some random values.
 	resetBishop();
@@ -228,6 +238,7 @@ function update(){
 				gameState = "play";
 				resetBishop();
 				resetRugs();
+				score = 0;
 			}
 		}
 	}
@@ -248,6 +259,15 @@ function update(){
 		// would look weird if the eagle rug was drawn on the top of the bishop,
 		// right?
 		drawBox(eagleRug, rugPos[0], rugPos[1]);
+		
+		// if the user is dragging the crosier, we only want to draw the crosier
+		// at the mouse position, not the right side too. There can only be one
+		// crosier at any time, unlike the rugs. continue here
+		if (dragCrosier){
+			drawImg(crosier, mousePosX, mousePosY);
+		}
+		// draw the crosier on the right side
+		drawBox(crosier, crosierPos[0], crosierPos[1]);
 		
 		// the user has clicked. We need to check if the mouse is over something
 		// and then deal with it.
@@ -327,8 +347,17 @@ function update(){
 			bishopX = bishopPositions[0][0] * boxSize;
 			bishopY = bishopPositions[0][1] * boxSize;
 		}
-		// We draw the bishop at its x and y variables.
-		drawImg(bishop, bishopX, bishopY);
+		
+		// we need to check if the bishop is holding the crosier. If so, we need 
+		// to draw a slightly different version of the bishop image - to the one
+		// with the crosier.
+		if (isHoldingCrosier){
+			// We draw the bishop at its x and y variables.
+			drawImg(bishopCrosier, bishopX, bishopY);
+		}
+		else{
+			drawImg(bishop, bishopX, bishopY);
+		}
 		
 		// Check if the game has finished. We do this by checking if we has reached
 		// the end of the bishop positions array, given in the positions.js file.
@@ -542,7 +571,7 @@ function drawScore(){
 	context.fillStyle = "rgb(0, 0, 0)";
 	context.font = "20px Verdana";
 	context.textAlign = "left";
-	context.fillText("Score: " + score, 10, 30);
+	context.fillText("Score: " + score, (boxSize / 4), ((boxSize / 3) * 2));
 }
 
 // This function accepts four inputs: the x and y coords of a box on the canvas, and

@@ -1,4 +1,4 @@
-- Add staff image.
+- Finish coding the crosier.
 - Add another bishop image, but with the staff.
 - Code so that you can drag-drop the staff on the bishop, and the bishop's image
 should turn from default to with-staff, and vice versa - click on the bishop
