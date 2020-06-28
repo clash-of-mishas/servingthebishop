@@ -24,7 +24,7 @@ var totalImages = 8;
 var bishop; var bishopX; var bishopY; 
 var bishopPos; var bishopWait;
 var bishopEndPos = bishopPositions.length;
-var bishopCrosier; // the image of the bishop with the crosier
+var bishopStaff; // the image of the bishop with the staff
 
 // the image for the right hand side where all the rugs, censers, candles, etc
 // will go.
@@ -37,10 +37,10 @@ var title; var titleSizeX; var titleSizeY; var titlePosX;
 var playButton; var playSizeX; var playSizeY; var playPosX; var playPosY; var playAlpha = 0;
 var optButton; var optSizeX; var optSizeY; var optPosX; var optPosY; var optAlpha = 0;
 
-// the crosier (the staff the bishop holds with the two dragon heads on the top 
+// the staff (the staff the bishop holds with the two dragon heads on the top 
 // of it) and a variable to check if the bishop is currently holding it.
-var crosier; var crosierPos = [12, 1]; var isHoldingCrosier = false;
-var dragCrosier; // check if user is dragging the crosier with the mouse.
+var staff; var staffPos = [12, 1]; var isHoldingStaff = false;
+var dragStaff = false; // check if user is dragging the staff with the mouse.
 
 // The speed at which animations such as buttons when you hover the mouse on fades
 // in and out. This value can be between 0 and 1, 1 being instantaneous.
@@ -172,13 +172,13 @@ function loadImages(){
 	title.src = "images/title.png";  playButton.src = "images/play.png";
 	title.onload = imgLoad;          playButton.onload = imgLoad;
 	
-	optButton = new Image();               crosier = new Image();
-	optButton.src = "images/options.png";  crosier.src = "images/crosier.png";
-	optButton.onload = imgLoad;            crosier.onload = imgLoad;
+	optButton = new Image();               staff = new Image();
+	optButton.src = "images/options.png";  staff.src = "images/staff.png";
+	optButton.onload = imgLoad;            staff.onload = imgLoad;
 	
-	bishopCrosier = new Image();
-	bishopCrosier.src = "images/bishop_crosier.png";
-	bishopCrosier.onload = imgLoad;
+	bishopStaff = new Image();
+	bishopStaff.src = "images/bishop_staff.png";
+	bishopStaff.onload = imgLoad;
 		
 	// Initialise the images' corresponding variables with some random values.
 	resetBishop();
@@ -260,45 +260,60 @@ function update(){
 		// right?
 		drawBox(eagleRug, rugPos[0], rugPos[1]);
 		
-		// if the user is dragging the crosier, we only want to draw the crosier
+		// if the user is dragging the staff, we only want to draw the staff
 		// at the mouse position, not the right side too. There can only be one
-		// crosier at any time, unlike the rugs. continue here
-		if (dragCrosier){
-			drawImg(crosier, mousePosX, mousePosY);
+		// staff at any time, unlike the rugs.
+		if (dragStaff){
+			drawImg(staff, (mousePosX - halfBox), (mousePosY - halfBox));
 		}
-		// draw the crosier on the right side
-		drawBox(crosier, crosierPos[0], crosierPos[1]);
+		else if (!isHoldingStaff){
+			// draw the staff on the right side
+			drawBox(staff, staffPos[0], staffPos[1]);
+		}
+		
 		
 		// the user has clicked. We need to check if the mouse is over something
 		// and then deal with it.
 		if (mouseDown){
-			// the user has clicked on a new rug. We need to create a new rug
-			// in the array and set it to true so that it will only be drawn at
-			// the mouse position.
-			if (same(whichBox(mousePosX, mousePosY), rugPos) && (isCarryingRug == -1)){
-				// check if number of eagle rugs exceeds maximum number.
-				if (eagleRugs.length < maxNumRugs){
-					// append a new rug to the end of the array, and set the third
-					// value to "true", meaning the user is currently moving it.
-					eagleRugs.push([0, 0, true]);
-					isCarryingRug = eagleRugs.length - 1;
+			if (isCarryingRug == -1 && !dragStaff){
+				var mouseBox = whichBox(mousePosX, mousePosY);
+				var mouseRugPos = rugAtPos(mouseBox);
+				// the user has clicked on a new rug. We need to create a new rug
+				// in the array and set it to true so that it will only be drawn at
+				// the mouse position.
+				if (same(mouseBox, rugPos)){
+					// check if number of eagle rugs exceeds maximum number.
+					if (eagleRugs.length < maxNumRugs){
+						// append a new rug to the end of the array, and set the third
+						// value to "true", meaning the user is currently moving it.
+						eagleRugs.push([0, 0, true]);
+						isCarryingRug = eagleRugs.length - 1;
+					}
 				}
-			}
-			// user has clicked on a rug already on the floor.
-			else if (isCarryingRug == -1){
-				var pos = rugAtPos(whichBox(mousePosX, mousePosY));
-				// check if the box is not empty. If so, there is a rug on it.
-				if (pos > -1){
-					isCarryingRug = pos;
-					eagleRugs[pos][2] = true;
+				// user has clicked on a rug already on the floor.
+				else if (mouseRugPos > -1){
+					isCarryingRug = mouseRugPos;
+					eagleRugs[mouseRugPos][2] = true;
+				}
+				// the user has clicked on the staff icon on the right. Change the 
+				// dragStaff variable to true so that the game will draw the staff
+				// at the mouse position instead of the side.
+				else if (same(mouseBox, staffPos) && !isHoldingStaff){
+					dragStaff = true;
+				}
+				// the user has clicked on the bishop, so we remove the staff
+				// from the bishop and draw the staff at the mouse position.
+				else if (mouseIn(bishopX, bishopY, boxSize, boxSize) && isHoldingStaff){
+					dragStaff = true;
+					isHoldingStaff = false;
 				}
 			}
 		}
 		
 		// the user has let go of the left mouse button (LMB), so we drop the 
 		// rug at the desired block.
-		if (isCarryingRug > -1){
-			if (mouseUp){
+		if (mouseUp){
+			if (isCarryingRug > -1){
 				// if the user has dropped the rug at the right side, we 
 				// delete that rug, by going through the rugs array and find the 
 				// "active" one (ie, the third value is true) and delete it.
@@ -326,10 +341,18 @@ function update(){
 				}
 				isCarryingRug = -1;
 			}
-			else{
-				drawImg(eagleRug, (mousePosX - halfBox), (mousePosY - halfBox));
+			else if (dragStaff){
+				dragStaff = false;
+				if (mouseIn(bishopX, bishopY, boxSize, boxSize)){
+					isHoldingStaff = true;
+				}
 			}
 			
+		}
+		
+		// the user is holding a rug.
+		if (isCarryingRug > -1){
+			drawImg(eagleRug, (mousePosX - halfBox), (mousePosY - halfBox));
 		}
 		
 		// Goes through all the rugs in the array. 1st, check if the last value
@@ -348,12 +371,12 @@ function update(){
 			bishopY = bishopPositions[0][1] * boxSize;
 		}
 		
-		// we need to check if the bishop is holding the crosier. If so, we need 
+		// we need to check if the bishop is holding the staff. If so, we need 
 		// to draw a slightly different version of the bishop image - to the one
-		// with the crosier.
-		if (isHoldingCrosier){
+		// with the staff.
+		if (isHoldingStaff){
 			// We draw the bishop at its x and y variables.
-			drawImg(bishopCrosier, bishopX, bishopY);
+			drawImg(bishopStaff, bishopX, bishopY);
 		}
 		else{
 			drawImg(bishop, bishopX, bishopY);
