@@ -15,7 +15,7 @@ var canvasRect;
 // add one to imagesLoaded. If imagesLoaded == totalImages then we know that all images
 // have been loaded!
 var imagesLoaded = 0;
-var totalImages = 8;
+var totalImages = 10;
 
 // Here is where we will keep the image variables along with their X and Y coordinates, and 
 // their Drag variable, which will check if they are being dragged by the mouse. wait is
@@ -25,6 +25,11 @@ var bishop; var bishopX; var bishopY;
 var bishopPos; var bishopWait;
 var bishopEndPos = bishopPositions.length;
 var bishopStaff; // the image of the bishop with the staff
+
+// the trikiri and dikiri.
+var trikiri; var trikiriPos = [12, 2]; var dikiri; var dikiriPos = [12, 3];
+var isHoldingTrikiri = false; var isHoldingDikiri = false;
+var dragTrikiri = false; var dragDikiri = false;
 
 // the image for the right hand side where all the rugs, censers, candles, etc
 // will go.
@@ -176,10 +181,14 @@ function loadImages(){
 	optButton.src = "images/options.png";  staff.src = "images/staff.png";
 	optButton.onload = imgLoad;            staff.onload = imgLoad;
 	
-	bishopStaff = new Image();
-	bishopStaff.src = "images/bishop_staff.png";
-	bishopStaff.onload = imgLoad;
-		
+	bishopStaff = new Image();                   trikiri = new Image();
+	bishopStaff.src = "images/bishop_staff.png"; trikiri.src = "images/trikiri.png";
+	bishopStaff.onload = imgLoad;                trikiri.onload = imgLoad;
+	
+	dikiri = new Image();
+	dikiri.src = "images/dikiri.png";
+	dikiri.onload = imgLoad;
+	
 	// Initialise the images' corresponding variables with some random values.
 	resetBishop();
 }
@@ -238,6 +247,7 @@ function update(){
 				gameState = "play";
 				resetBishop();
 				resetRugs();
+				isHoldingStaff = false;
 				score = 0;
 			}
 		}
@@ -271,6 +281,22 @@ function update(){
 			drawBox(staff, staffPos[0], staffPos[1]);
 		}
 		
+		// Same for the trikiri and dikiri. The bishop can only hold both or just
+		// the dikiri.
+		if (dragTrikiri){
+			drawImg(trikiri, (mousePosX - halfBox), (mousePosY - halfBox));
+		}
+		else if (!isHoldingTrikiri){
+			// draw the trikiri and dikiri on the right side
+			drawBox(trikiri, trikiriPos[0], trikiriPos[1]);
+		}
+		
+		if (dragDikiri){
+			drawImg(dikiri, (mousePosX - halfBox), (mousePosY - halfBox));
+		}
+		else if (!isHoldingDikiri){
+			drawBox(dikiri, dikiriPos[0], dikiriPos[1]);
+		}
 		
 		// the user has clicked. We need to check if the mouse is over something
 		// and then deal with it.
@@ -301,6 +327,13 @@ function update(){
 				else if (same(mouseBox, staffPos) && !isHoldingStaff){
 					dragStaff = true;
 				}
+				// same for other icons on the right.
+				else if (same(mouseBox, trikiriPos) && !isHoldingTrikiri){
+					dragTrikiri = true;
+				}
+				else if (same(mouseBox, dikiriPos) && !isHoldingDikiri){
+					dragDikiri = true;
+				}
 				// the user has clicked on the bishop, so we remove the staff
 				// from the bishop and draw the staff at the mouse position.
 				else if (mouseIn(bishopX, bishopY, boxSize, boxSize) && isHoldingStaff){
@@ -313,6 +346,21 @@ function update(){
 		// the user has let go of the left mouse button (LMB), so we drop the 
 		// rug at the desired block.
 		if (mouseUp){
+			if (mouseIn(bishopX, bishopY, boxSize, boxSize)){
+				if (dragStaff){
+					dragStaff = false;
+					isHoldingStaff = true;
+				}
+				else if (dragTrikiri){
+					dragTrikiri = false;
+					isHoldingTrikiri = true;
+				}
+				else if (dragDikiri){
+					dragDikiri = false;
+					isHoldingDikiri = true;
+				}
+			}
+			
 			if (isCarryingRug > -1){
 				// if the user has dropped the rug at the right side, we 
 				// delete that rug, by going through the rugs array and find the 
@@ -341,13 +389,6 @@ function update(){
 				}
 				isCarryingRug = -1;
 			}
-			else if (dragStaff){
-				dragStaff = false;
-				if (mouseIn(bishopX, bishopY, boxSize, boxSize)){
-					isHoldingStaff = true;
-				}
-			}
-			
 		}
 		
 		// the user is holding a rug.
