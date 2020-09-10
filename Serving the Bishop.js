@@ -220,7 +220,7 @@ function mainLoop(time){
 	update();
 	
 	// This function asks the browser to run mainLoop() again whenever it's ready.
-	// If you have a faste computer, the browser will run the mainLoop() faster, and 
+	// If you have a fast computer, the browser will run the mainLoop() faster, and 
 	// the browser will call mainLoop() more often each second.
 	requestAnimationFrame(mainLoop);
 }
@@ -247,7 +247,7 @@ function update(){
 				gameState = "play";
 				resetBishop();
 				resetRugs();
-				isHoldingStaff = false;
+				resetObjects();
 				score = 0;
 			}
 		}
@@ -346,7 +346,11 @@ function update(){
 		// the user has let go of the left mouse button (LMB), so we drop the 
 		// rug at the desired block.
 		if (mouseUp){
+			// was the mouse on the bishop?
 			if (mouseIn(bishopX, bishopY, boxSize, boxSize)){
+				// if the user was dragging the staff and lets go on the bishop,
+				// we want to give the bishop the staff. Similar for all the other
+				// objects.
 				if (dragStaff){
 					dragStaff = false;
 					isHoldingStaff = true;
@@ -361,6 +365,12 @@ function update(){
 				}
 			}
 			
+			else{
+				// the user let go of the LMB on somewhere other than the bishop, so we
+				// return them back to their original places.
+				returnObjects();
+			}
+			
 			if (isCarryingRug > -1){
 				// if the user has dropped the rug at the right side, we 
 				// delete that rug, by going through the rugs array and find the 
@@ -368,6 +378,11 @@ function update(){
 				if (whichBox(mousePosX, mousePosY)[0] == rugPos[0]){
 					eagleRugs.splice(isCarryingRug, 1);
 				}
+				// Same for the top row. (this row keeps our score and info)
+				else if (whichBox(mousePosX, mousePosY)[1] == 0){
+					eagleRugs.splice(isCarryingRug, 1);
+				}
+				// user has dropped the rug on a valid place.
 				else{
 					// We set the box coords (NOT the canvas coords!) of the current
 					// rug to the mouse position, and set it to false - meaning the 
@@ -650,4 +665,21 @@ function mouseIn(x, y, width, height){
 	var isInY = (mousePosY > y) && (mousePosY < (y + height));
 	// If both values are true, then we return true with an AND operator.
 	return isInX && isInY;
+}
+
+// Resets all the objects that the bishop can hold.
+function resetObjects(){
+	dragStaff = false;
+	isHoldingStaff = false;
+	dragTrikiri = false;
+	isHoldingTrikiri = false;
+	dragDikiri = false;
+	isHoldingDikiri = false
+}
+
+// returns all the objects that the user may be dragging with the mouse.
+function returnObjects(){
+	dragStaff = false;
+	dragTrikiri = false;
+	dragDikiri = false;
 }

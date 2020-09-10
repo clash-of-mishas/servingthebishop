@@ -1,11 +1,15 @@
-- Finish coding the crosier.
-- Add another bishop image, but with the staff.
-- Code so that you can drag-drop the staff on the bishop, and the bishop's image
-should turn from default to with-staff, and vice versa - click on the bishop
-and get the staff from him and put the staff back on the right side. Bishop's
-image goes back to normal.
+- Code drag-drop functionality for trikiri and dikiri.
+- Bishop cannot hold trikiri and dikiri and staff at the same time.
+- Draw image of bishop with trikiri and/or dikiri. (three total images - bishop&trikiri,
+bishop&dikiri, bishop&trikiri&dikiri).
 - Draw a "Game Over!" screen
 - Code the "Game Over!" screen
+- Start work on the censer. Idea - maybe make an animation of bishop cesning?
+Provide similar functionality as the staff - drag and drop, and take from
+the bishop. Maybe add coal+incense too? So that you need to prepare it before 
+you can give it to the bishop.
+
 
 For when the game is finished - fuly coded:
 - Draw the leaderboards button and code it.
+- Code the "options" button - add a options screen.
