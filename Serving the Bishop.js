@@ -15,7 +15,7 @@ var canvasRect;
 // add one to imagesLoaded. If imagesLoaded == totalImages then we know that all images
 // have been loaded!
 var imagesLoaded = 0;
-var totalImages = 10;
+var totalImages = 13;
 
 // Here is where we will keep the image variables along with their X and Y coordinates, and 
 // their Drag variable, which will check if they are being dragged by the mouse. wait is
@@ -30,6 +30,7 @@ var bishopStaff; // the image of the bishop with the staff
 var trikiri; var trikiriPos = [12, 2]; var dikiri; var dikiriPos = [12, 3];
 var isHoldingTrikiri = false; var isHoldingDikiri = false;
 var dragTrikiri = false; var dragDikiri = false;
+var bishopTrikiri; var bishopDikiri; var bishopTriDi;
 
 // the image for the right hand side where all the rugs, censers, candles, etc
 // will go.
@@ -68,7 +69,10 @@ var rugPos = [12, 0];
 // "up", so mouseUp equals true, for now.
 var mouseDown = false;
 var mouseUp = true;
+// the user has let go of the left mouse button.
 var mouseClick = false;
+// The user has just clicked on the mouse.
+var newClick = false;
 
 // Variables to check where the mouse pointer is, on the entire screen.
 var mousePosX = 0;
@@ -181,13 +185,17 @@ function loadImages(){
 	optButton.src = "images/options.png";  staff.src = "images/staff.png";
 	optButton.onload = imgLoad;            staff.onload = imgLoad;
 	
-	bishopStaff = new Image();                   trikiri = new Image();
-	bishopStaff.src = "images/bishop_staff.png"; trikiri.src = "images/trikiri.png";
-	bishopStaff.onload = imgLoad;                trikiri.onload = imgLoad;
+	bishopStaff = new Image();                    trikiri = new Image();
+	bishopStaff.src = "images/bishop_staff.png";  trikiri.src = "images/trikiri.png";
+	bishopStaff.onload = imgLoad;                 trikiri.onload = imgLoad;
 	
-	dikiri = new Image();
-	dikiri.src = "images/dikiri.png";
-	dikiri.onload = imgLoad;
+	dikiri = new Image();              bishopTrikiri = new Image();
+	dikiri.src = "images/dikiri.png";  bishopTrikiri.src = "images/bishop_trikiri.png";
+	dikiri.onload = imgLoad;           bishopTrikiri.onload = imgLoad();
+	
+	bishopDikiri = new Image();                     bishopTriDi = new Image();
+	bishopDikiri.src = "images/bishop_dikiri.png";  bishopTriDi.src = "images/bishop_tri_di.png";
+	bishopDikiri.onload = imgLoad();                bishopTriDi.onload = imgLoad();
 	
 	// Initialise the images' corresponding variables with some random values.
 	resetBishop();
@@ -300,51 +308,59 @@ function update(){
 		
 		// the user has clicked. We need to check if the mouse is over something
 		// and then deal with it.
-		if (mouseDown){
-			if (isCarryingRug == -1 && !dragStaff){
-				var mouseBox = whichBox(mousePosX, mousePosY);
-				var mouseRugPos = rugAtPos(mouseBox);
-				// the user has clicked on a new rug. We need to create a new rug
-				// in the array and set it to true so that it will only be drawn at
-				// the mouse position.
-				if (same(mouseBox, rugPos)){
-					// check if number of eagle rugs exceeds maximum number.
-					if (eagleRugs.length < maxNumRugs){
-						// append a new rug to the end of the array, and set the third
-						// value to "true", meaning the user is currently moving it.
-						eagleRugs.push([0, 0, true]);
-						isCarryingRug = eagleRugs.length - 1;
-					}
+		if (newClick){
+			var mouseBox = whichBox(mousePosX, mousePosY);
+			var mouseRugPos = rugAtPos(mouseBox);
+			// the user has clicked on a new rug. We need to create a new rug
+			// in the array and set it to true so that it will only be drawn at
+			// the mouse position.
+			if (same(mouseBox, rugPos)){
+				// check if number of eagle rugs exceeds maximum number.
+				if (eagleRugs.length < maxNumRugs){
+					// append a new rug to the end of the array, and set the third
+					// value to "true", meaning the user is currently moving it.
+					eagleRugs.push([0, 0, true]);
+					isCarryingRug = eagleRugs.length - 1;
 				}
-				// user has clicked on a rug already on the floor.
-				else if (mouseRugPos > -1){
-					isCarryingRug = mouseRugPos;
-					eagleRugs[mouseRugPos][2] = true;
-				}
-				// the user has clicked on the staff icon on the right. Change the 
-				// dragStaff variable to true so that the game will draw the staff
-				// at the mouse position instead of the side.
-				else if (same(mouseBox, staffPos) && !isHoldingStaff){
-					dragStaff = true;
-				}
-				// same for other icons on the right.
-				else if (same(mouseBox, trikiriPos) && !isHoldingTrikiri){
-					dragTrikiri = true;
-				}
-				else if (same(mouseBox, dikiriPos) && !isHoldingDikiri){
-					dragDikiri = true;
-				}
-				// the user has clicked on the bishop, so we remove the staff
-				// from the bishop and draw the staff at the mouse position.
-				else if (mouseIn(bishopX, bishopY, boxSize, boxSize) && isHoldingStaff){
+			}
+			// user has clicked on a rug already on the floor.
+			else if (mouseRugPos > -1){
+				isCarryingRug = mouseRugPos;
+				eagleRugs[mouseRugPos][2] = true;
+			}
+			// the user has clicked on the staff icon on the right. Change the 
+			// dragStaff variable to true so that the game will draw the staff
+			// at the mouse position instead of the side.
+			else if (same(mouseBox, staffPos) && !isHoldingStaff){
+				dragStaff = true;
+			}
+			// same for other icons on the right.
+			else if (same(mouseBox, trikiriPos) && !isHoldingTrikiri){
+				dragTrikiri = true;
+			}
+			else if (same(mouseBox, dikiriPos) && !isHoldingDikiri){
+				dragDikiri = true;
+			}
+			// the user has clicked on the bishop, so we remove the staff
+			// from the bishop and draw the staff at the mouse position.
+			else if (mouseIn(bishopX, bishopY, boxSize, boxSize)){
+				if (isHoldingStaff){
 					dragStaff = true;
 					isHoldingStaff = false;
 				}
+				else if (isHoldingTrikiri){
+					dragTrikiri = true;
+					isHoldingTrikiri = false;
+				}
+				else if (isHoldingDikiri){
+					dragDikiri = true;
+					isHoldingDikiri = false;
+				}
 			}
+			newClick = false;
 		}
-		
-		// the user has let go of the left mouse button (LMB), so we drop the 
-		// rug at the desired block.
+
+		// the user has let go of the left mouse button (LMB).
 		if (mouseUp){
 			// was the mouse on the bishop?
 			if (mouseIn(bishopX, bishopY, boxSize, boxSize)){
@@ -352,16 +368,26 @@ function update(){
 				// we want to give the bishop the staff. Similar for all the other
 				// objects.
 				if (dragStaff){
-					dragStaff = false;
-					isHoldingStaff = true;
+					// The staff requires the bishop not to be holding anything.
+					if (bishopNotHoldingAny()){
+						dragStaff = false;
+						isHoldingStaff = true;
+					}
+					else{ returnObjects(); }
 				}
-				else if (dragTrikiri){
-					dragTrikiri = false;
-					isHoldingTrikiri = true;
+				if (dragTrikiri){
+					if (bishopNotHoldingAny() || isHoldingDikiri){
+						dragTrikiri = false;
+						isHoldingTrikiri = true;
+					}
+					else{ returnObjects(); }
 				}
 				else if (dragDikiri){
-					dragDikiri = false;
-					isHoldingDikiri = true;
+					if (bishopNotHoldingAny() || isHoldingTrikiri){
+						dragDikiri = false;
+						isHoldingDikiri = true;
+					}
+					else{ returnObjects(); }
 				}
 			}
 			
@@ -431,10 +457,21 @@ function update(){
 		// to draw a slightly different version of the bishop image - to the one
 		// with the staff.
 		if (isHoldingStaff){
-			// We draw the bishop at its x and y variables.
+			// We draw the bishop with the staff.
 			drawImg(bishopStaff, bishopX, bishopY);
 		}
+		else if (isHoldingTrikiri && !isHoldingDikiri){
+			drawImg(bishopTrikiri, bishopX, bishopY);
+		}
+		else if (isHoldingDikiri && !isHoldingTrikiri){
+			drawImg(bishopDikiri, bishopX, bishopY);
+		}
+		// bishop is holding both trikiri and dikiri
+		else if (isHoldingTrikiri && isHoldingDikiri){
+			drawImg(bishopTriDi, bishopX, bishopY);
+		}
 		else{
+			// Bishop isn't holding anything.
 			drawImg(bishop, bishopX, bishopY);
 		}
 		
@@ -526,6 +563,7 @@ function update(){
 function handleDown(event){
 	mouseUp = false;
 	mouseDown = true;
+	newClick = true;
 }
 
 // Exact opposite as above.
@@ -682,4 +720,8 @@ function returnObjects(){
 	dragStaff = false;
 	dragTrikiri = false;
 	dragDikiri = false;
+}
+
+function bishopNotHoldingAny(){
+	return (!isHoldingStaff && !isHoldingTrikiri && !isHoldingDikiri);
 }

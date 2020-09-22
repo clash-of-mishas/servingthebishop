@@ -1,15 +1,28 @@
-- Code drag-drop functionality for trikiri and dikiri.
-- Bishop cannot hold trikiri and dikiri and staff at the same time.
-- Draw image of bishop with trikiri and/or dikiri. (three total images - bishop&trikiri,
-bishop&dikiri, bishop&trikiri&dikiri).
+- Draw an static image for the censer on the right side.
+- Draw images for the coal + incense.
+- Code the coal and incense. Add a timer for the coal - maybe 
+- Draw an animation with the bishop and the censer, censing! Maybe 3-5 frames.
+- Implement the animation in software. This is tricky and will take a few hours to
+perfect.
+- Add the censer to the game (set up the usual variables and call imgLoad() func).
+
+
 - Draw a "Game Over!" screen
 - Code the "Game Over!" screen
-- Start work on the censer. Idea - maybe make an animation of bishop cesning?
-Provide similar functionality as the staff - drag and drop, and take from
-the bishop. Maybe add coal+incense too? So that you need to prepare it before 
-you can give it to the bishop.
 
 
-For when the game is finished - fuly coded:
+For when the game is finished - fully coded:
 - Draw the leaderboards button and code it.
 - Code the "options" button - add a options screen.
+
+Possible ideas:
+- For now, the bishop's orientation is static. We could add the ability to rotate - so that he
+can turn around and face east, for example. This would be tricky as we will need to draw a LOT
+of sprites for each orientation - north, south, east and west. If the censer is animated, 
+it could total close to an hundred extra sprites! This is strictly for after the game is finished.
+
+
+Remember to update the following functions when new objects are added:
+resetObjects()
+returnObjects()
+bishopNotHoldingAny()
