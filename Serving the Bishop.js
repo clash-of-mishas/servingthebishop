@@ -1,6 +1,6 @@
 // All the text after the // to the end of the line is a comment and is ignored by the browser.
 
-// Serving the Bishop game, written by Michael Souprounovich, started in December 2018
+// Serving the Bishop game, written by Michael Souprounovich, project started in December 2018
 
 // These three variables will hold the canvas where we will draw all the images onto.
 // Canvas is the canvas object. We will set its canvas.width and canvas.height to some 
@@ -105,6 +105,12 @@ var speed = 100;
 // censer on time, you get more score. But if you're late, less score.
 var score = 0;
 
+// the back button for the options screen. We need to know the x, y positions and 
+// the size of it to check if the mouse has ckicked on it.
+var back = "< Back";
+var backPosX; var backPosY;
+var backSizeX; var backSizeY;
+
 // When the website have finished loading, the browser will automatically call
 // the window.onload = function(){} function. This is our entry point.  
 window.onload = function(){
@@ -146,6 +152,8 @@ window.onload = function(){
 	playSizeX = boxSize * 4;                   optSizeX = playSizeX;
 	playSizeY = Math.floor(playSizeX / 1.777); optSizeY = playSizeY;
 	
+	backPosX = (boxSize / 4); backPosY = ((boxSize / 3) * 2);
+	backSizeX = 6 * 30; backSizeY = 1 * 30;
 	
 	// Ask the browser very nicely to call the corresponding funcions when the user 
 	// clicks the mouse or moves the mouse in the canvas. addEventListener()
@@ -201,6 +209,8 @@ function loadImages(){
 	resetBishop();
 }
 
+// each time a image is loaded onto the browser, it will call this function. This function
+// checks if all the images has been loaded. If so, we change the gameState to "main_menu".
 function imgLoad(){
 	imagesLoaded += 1;
 	if (imagesLoaded == totalImages){ 
@@ -257,6 +267,10 @@ function update(){
 				resetRugs();
 				resetObjects();
 				score = 0;
+			}
+			// likewise for the options button. 
+			if (mouseIn(optPosX, optPosY, optSizeX, optSizeY)){
+				gameState = "options";
 			}
 		}
 	}
@@ -552,6 +566,25 @@ function update(){
 			gameState = "end"
 		}
 	}
+	
+	// user is in the options menu. 
+	else if (gameState == "options"){
+		showOptionsMenu();
+		
+		
+		
+		
+		
+		
+		// to be continued here
+		
+		
+		
+		
+		
+		
+	}
+	
 	// When the game has finished, we want to go back to the main menu.
 	else if (gameState == "end"){
 		gameState = "main_menu";
@@ -686,14 +719,14 @@ function rugAtPos(box){
 // Draws the score at the top left.
 function drawScore(){
 	context.fillStyle = "rgb(0, 0, 0)";
-	context.font = "20px Verdana";
+	context.font = "30px Verdana";
 	context.textAlign = "left";
 	context.fillText("Score: " + score, (boxSize / 4), ((boxSize / 3) * 2));
 }
 
 // This function accepts four inputs: the x and y coords of a box on the canvas, and
 // the width and height of the box. It will then check the mouse positions and if 
-// they are inside the box, then return true.
+// they are inside the box, then it will return true.
 function mouseIn(x, y, width, height){
 	// check if the mouse x position is between the left and right sides x coords
 	// of the box.
@@ -722,6 +755,21 @@ function returnObjects(){
 	dragDikiri = false;
 }
 
+// check if the bishop is not holding any objects. Syntatic sugar.
 function bishopNotHoldingAny(){
 	return (!isHoldingStaff && !isHoldingTrikiri && !isHoldingDikiri);
 }
+
+// Display the options menu.
+function showOptionsMenu(){
+	context.fillStyle = "rgb(0, 0, 0)";
+	context.font = "30px Verdana";
+	context.textAlign = "left";
+	context.fillText("FPS: " + FPS, (boxSize * 2), (boxSize * 3));
+	context.fillText(back, backPosX, backPosY);
+}
+
+
+
+
+

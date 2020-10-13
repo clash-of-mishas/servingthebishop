@@ -1,3 +1,10 @@
+- Continue the options menu.
+- The code that deals with fonts is very bad code. Needs immediate attention. Need to change:
+1. From pixels to something a bit more relative to your screen, 2. Add code that checks how
+many pixels wide a drawn font will be. THEN we can finally 3. add code that checks if a mouse
+has clicked on the "back" button. (very simple)
+
+
 - Draw an static image for the censer on the right side.
 - Draw images for the coal + incense.
 - Code the coal and incense. Add a timer for the coal - maybe 
@@ -5,6 +12,8 @@
 - Implement the animation in software. This is tricky and will take a few hours to
 perfect.
 - Add the censer to the game (set up the usual variables and call imgLoad() func).
+- Change the font from pixels to points(or something equivalent), to ensure that the text
+will all be the same size across different resolutions and DPIs.
 
 
 - Draw a "Game Over!" screen
@@ -26,3 +35,4 @@ Remember to update the following functions when new objects are added:
 resetObjects()
 returnObjects()
 bishopNotHoldingAny()
+remember to update totalImages each time a image is added!
